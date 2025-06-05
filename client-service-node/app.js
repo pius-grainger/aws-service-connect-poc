@@ -4,7 +4,7 @@ const os = require('os');
 
 const app = express();
 const port = process.env.PORT || 8080;
-const API_SERVICE_URL = process.env.API_SERVICE_URL || 'http://api-service-node';
+const API_SERVICE_URL = process.env.API_SERVICE_URL || 'http://api-service';
 
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy' });

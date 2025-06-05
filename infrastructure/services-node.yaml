@@ -112,7 +112,7 @@ Resources:
               AppProtocol: http
           Environment:
             - Name: API_SERVICE_URL
-              Value: http://api-service-node
+              Value: http://api-service
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -153,12 +153,6 @@ Resources:
             ClientAliases:
               - Port: 80
                 DnsName: client-service-node
-        LogConfiguration:
-          LogDriver: awslogs
-          Options:
-            awslogs-group: !Ref ClientServiceLogGroup
-            awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: client-service-node-sc
 
 Outputs:
   ApiServiceArn:

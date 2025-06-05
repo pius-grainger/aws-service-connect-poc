@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  api-service:
+    build: ./api-service
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+    networks:
+      - service-connect-network
+
+  client-service:
+    build: ./client-service
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - API_SERVICE_URL=http://api-service:8080
+    depends_on:
+      - api-service
+    networks:
+      - service-connect-network
+
+networks:
+  service-connect-network:
+    driver: bridge

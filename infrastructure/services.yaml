@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Service Connect POC - Services'
+
+Parameters:
+  MainStackName:
+    Type: String
+    Description: Name of the main infrastructure stack
+    Default: ServiceConnectPOC
+
+  ApiServiceImageUri:
+    Type: String
+    Description: URI of the API service Docker image
+
+  ClientServiceImageUri:
+    Type: String
+    Description: URI of the client service Docker image
+
+Resources:
+  # Task Definition for API Service
+  ApiServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: api-service
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "${MainStackName}-ECSTaskExecutionRole"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "${MainStackName}-ECSTaskExecutionRole"
+      ContainerDefinitions:
+        - Name: api-service
+          Image: !Ref ApiServiceImageUri
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+              Name: api-service-port
+              AppProtocol: http
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ApiServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: api-service
+          Environment:
+            - Name: PORT
+              Value: '8080'
+
+  # Log Group for API Service
+  ApiServiceLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/api-service
+      RetentionInDays: 7
+
+  # Service for API Service with Service Connect
+  ApiService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: api-service
+      Cluster: 
+        Fn::ImportValue: !Sub "${MainStackName}-ECSCluster"
+      TaskDefinition: !Ref ApiServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet1"
+            - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet2"
+          SecurityGroups:
+            - Fn::ImportValue: !Sub "${MainStackName}-ECSSecurityGroup"
+      ServiceConnectConfiguration:
+        Enabled: true
+        Namespace: service-connect-namespace
+        Services:
+          - PortName: api-service-port
+            DiscoveryName: api-service
+            ClientAliases:
+              - Port: 80
+                DnsName: api-service
+
+  # Task Definition for Client Service
+  ClientServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: client-service
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: 
+        Fn::ImportValue: !Sub "${MainStackName}-ECSTaskExecutionRole"
+      TaskRoleArn: 
+        Fn::ImportValue: !Sub "${MainStackName}-ECSTaskExecutionRole"
+      ContainerDefinitions:
+        - Name: client-service
+          Image: !Ref ClientServiceImageUri
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+              Name: client-service-port
+              AppProtocol: http
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ClientServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: client-service
+          Environment:
+            - Name: PORT
+              Value: '8080'
+            - Name: API_SERVICE_URL
+              Value: 'http://api-service'
+
+  # Log Group for Client Service
+  ClientServiceLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/client-service
+      RetentionInDays: 7
+
+  # Service for Client Service with Service Connect
+  ClientService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: client-service
+      Cluster: 
+        Fn::ImportValue: !Sub "${MainStackName}-ECSCluster"
+      TaskDefinition: !Ref ClientServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet1"
+            - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet2"
+          SecurityGroups:
+            - Fn::ImportValue: !Sub "${MainStackName}-ECSSecurityGroup"
+      ServiceConnectConfiguration:
+        Enabled: true
+        Namespace: service-connect-namespace
+        Services:
+          - PortName: client-service-port
+            DiscoveryName: client-service
+            ClientAliases:
+              - Port: 80
+                DnsName: client-service
+
+Outputs:
+  ApiServiceName:
+    Description: API Service Name
+    Value: !GetAtt ApiService.Name
+
+  ClientServiceName:
+    Description: Client Service Name
+    Value: !GetAtt ClientService.Name

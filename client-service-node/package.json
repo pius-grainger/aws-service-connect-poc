@@ -1,0 +1,13 @@
+{
+  "name": "client-service",
+  "version": "1.0.0",
+  "description": "Client Service for AWS Service Connect POC",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
+  }
+}

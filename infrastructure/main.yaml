@@ -133,14 +133,32 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-PublicSubnet2"
 
-  ECSCluster:
+  ClusterName:
     Description: ECS Cluster Name
     Value: !Ref ECSCluster
     Export:
+      Name: !Sub "${AWS::StackName}-ClusterName"
+      
+  ECSCluster:
+    Description: ECS Cluster Name (Legacy)
+    Value: !Ref ECSCluster
+    Export:
       Name: !Sub "${AWS::StackName}-ECSCluster"
+      
+  NamespaceName:
+    Description: Service Connect Namespace Name
+    Value: service-connect-namespace
+    Export:
+      Name: !Sub "${AWS::StackName}-NamespaceName"
 
-  ECSSecurityGroup:
+  ServiceSecurityGroup:
     Description: Security Group for ECS Tasks
+    Value: !Ref ECSSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-ServiceSecurityGroup"
+      
+  ECSSecurityGroup:
+    Description: Security Group for ECS Tasks (Legacy)
     Value: !Ref ECSSecurityGroup
     Export:
       Name: !Sub "${AWS::StackName}-ECSSecurityGroup"

@@ -48,6 +48,7 @@ Resources:
             - ContainerPort: 8080
               HostPort: 8080
               Name: api-service-port
+              AppProtocol: http
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -84,10 +85,10 @@ Resources:
           Fn::ImportValue: !Sub ${MainStackName}-NamespaceName
         Services:
           - PortName: api-service-port
-            DiscoveryName: api-service
+            DiscoveryName: api-service-node
             ClientAliases:
-              - Port: 8080
-                DnsName: api-service
+              - Port: 80
+                DnsName: api-service-node
 
   # Client Service
   ClientServiceTaskDefinition:
@@ -108,9 +109,10 @@ Resources:
             - ContainerPort: 8080
               HostPort: 8080
               Name: client-service-port
+              AppProtocol: http
           Environment:
             - Name: API_SERVICE_URL
-              Value: http://api-service:8080
+              Value: http://api-service-node
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -149,8 +151,14 @@ Resources:
           - PortName: client-service-port
             DiscoveryName: client-service-node
             ClientAliases:
-              - Port: 8080
+              - Port: 80
                 DnsName: client-service-node
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref ClientServiceLogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: client-service-node-sc
 
 Outputs:
   ApiServiceArn:

@@ -61,7 +61,7 @@ Resources:
     Properties:
       ServiceName: api-service
       Cluster: 
-        Fn::ImportValue: !Sub "${MainStackName}-ECSCluster"
+        Fn::ImportValue: !Sub "${MainStackName}-ClusterName"
       TaskDefinition: !Ref ApiServiceTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
@@ -72,10 +72,11 @@ Resources:
             - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet1"
             - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet2"
           SecurityGroups:
-            - Fn::ImportValue: !Sub "${MainStackName}-ECSSecurityGroup"
+            - Fn::ImportValue: !Sub "${MainStackName}-ServiceSecurityGroup"
       ServiceConnectConfiguration:
         Enabled: true
-        Namespace: service-connect-namespace
+        Namespace:
+          Fn::ImportValue: !Sub "${MainStackName}-NamespaceName"
         Services:
           - PortName: api-service-port
             DiscoveryName: api-service
@@ -130,7 +131,7 @@ Resources:
     Properties:
       ServiceName: client-service
       Cluster: 
-        Fn::ImportValue: !Sub "${MainStackName}-ECSCluster"
+        Fn::ImportValue: !Sub "${MainStackName}-ClusterName"
       TaskDefinition: !Ref ClientServiceTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
@@ -141,10 +142,11 @@ Resources:
             - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet1"
             - Fn::ImportValue: !Sub "${MainStackName}-PublicSubnet2"
           SecurityGroups:
-            - Fn::ImportValue: !Sub "${MainStackName}-ECSSecurityGroup"
+            - Fn::ImportValue: !Sub "${MainStackName}-ServiceSecurityGroup"
       ServiceConnectConfiguration:
         Enabled: true
-        Namespace: service-connect-namespace
+        Namespace:
+          Fn::ImportValue: !Sub "${MainStackName}-NamespaceName"
         Services:
           - PortName: client-service-port
             DiscoveryName: client-service
